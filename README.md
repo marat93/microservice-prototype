@@ -88,6 +88,9 @@ GET /messages/:id
 ```
 
 # Описание процесса разработки
+
+⬇️ [PDF-файл с описанием задачи](https://github.com/marat93/microservice-prototype/raw/master/description.pdf)
+
 ### Инициализация проекта
 Согласно требованиям следует использовать `Ruby on Rails`. Инициализировал фреймворк следующим образом: `rails new microservice_prototype --api -T`. Инициализация с такими опциями создает рельсы в режиме API. Это значит что не будет включен middleware для рендеринга вьюх, сессии итд. `-T` – не использовать фреймворк minitest.
 
