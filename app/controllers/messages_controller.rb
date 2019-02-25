@@ -1,22 +1,34 @@
 class MessagesController < ApplicationController
   def create
-    messages = message_params.map do |message|
-      message[:status]     = Message.statuses.keys[0]
-      message[:deliver_at] = Time.zone.now if message[:deliver_at].blank?
-      message
+    result = ProcessMessage.call(params: messages_params)
+
+    if result.success?
+      messages_object = result.messages.as_json(only: [:id, :status])
+
+      json_response(messages_object, :created)
+    else
+      json_error(result.errors)
     end
+  end
 
-    messages = Message.create!(messages)
-    messages_object = messages.as_json(only: [:id, :status])
+  def show
+    message = Message.find(params[:id])
 
-    json_response(messages_object, :created)
-  rescue ArgumentError, ActiveRecord::RecordInvalid => exception
-    json_error(exception.message)
+    json_response({
+      "id":         message.id,
+      "type":       message.type,
+      "target":     message.target,
+      "body":       message.body,
+      "deliver_at": message.deliver_at.iso8601,
+      "status":     message.status
+    }, :ok)
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
   end
 
   private
 
-  def message_params
+  def messages_params
     params.require(:messages).map do |p|
       p.permit(:type, :target, :body, :deliver_at)
     end

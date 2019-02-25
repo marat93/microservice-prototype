@@ -1,7 +1,41 @@
 RSpec.describe 'Messages API' do
-  describe 'POST /messages' do
-    subject(:api_response) { json_response }
+  subject(:api_response) { json_response }
 
+  describe 'GET /message/:id' do
+    before { get "/messages/#{message_id}" }
+
+    context 'when id exists' do
+      let(:delivery_time) { Time.zone.now }
+      let(:message) do
+        create_sample_message(type: "whatsapp", target: "target", body: "body", deliver_at: delivery_time)
+      end
+
+      let(:message_id) { message.id }
+
+      it { is_expected.to eql({
+        "id":         message.id,
+        "type":       "whatsapp",
+        "target":     "target",
+        "body":       "body",
+        "deliver_at": delivery_time.iso8601,
+        "status":     "pending"
+      }) }
+    end
+
+    context 'when id does not exist' do
+      let(:message_id) { "non-existing-id" }
+
+      it 'renders empty body' do
+        expect(response.body).to be_empty
+      end
+
+      it 'responses with "Not found" error' do
+        expect(response).to be_not_found
+      end
+    end
+  end
+
+  describe 'POST /messages' do
     before { post '/messages', params: { "messages": [message] } }
 
     let(:valid_message) do
@@ -47,5 +81,10 @@ RSpec.describe 'Messages API' do
 
   def error_message(error_message)
     { errors: error_message }
+  end
+
+  def create_sample_message(params)
+    result = ProcessMessage.call(params: [params])
+    result.messages.first
   end
 end
